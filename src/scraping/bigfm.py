@@ -52,7 +52,7 @@ def get_songs(station: int, start: datetime.datetime, end: datetime.datetime = N
                            params={"station": station, "start": start, "end": end}).json()
     result = [{"airtime": song["airtime"],
                "duration": song["duration"],
-               "guid": song["song"]["entry"][0]["guid"],
+               "id": song["song"]["entry"][0]["guid"],
                "title": song["song"]["entry"][0]["title"],
                "artists": " ".join([artist["name"] for artist in song["song"]["entry"][0]["artist"]["entry"]])}
               for song in response["result"]["entry"]]

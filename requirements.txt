@@ -1,3 +1,4 @@
 redis
 toml
 requests
+spotipy
