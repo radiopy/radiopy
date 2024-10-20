@@ -40,7 +40,7 @@ def search_song(title, artists: str = None, item_id: str = None):
     if results == [None]:
         print("edge case")
         results = spotify.search(search_term, limit=1, type="track")["tracks"]["items"]
-    if results:  # TODO: if spotify returns a result
+    if results:
         cache_entry = {
             "title": title,
             "artists": artists,

@@ -7,3 +7,9 @@ port = 6379
 username = "username"
 password = "password"
 decode_responses = true
+
+[spotify]
+client_id = "client_id"
+client_secret = "client_secret"
+redirect_uri = "http://127.0.0.1:8080/callback"
+scope = "playlist-modify-private playlist-modify-public"
