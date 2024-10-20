@@ -1,0 +1,9 @@
+[redis]
+expiration = 1209600  # 2 weeks
+
+[redis.connection]
+host = "example.com"
+port = 6379
+username = "username"
+password = "password"
+decode_responses = true
