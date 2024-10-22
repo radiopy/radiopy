@@ -58,10 +58,27 @@ def get_songs(station: int, start: datetime.datetime, end: datetime.datetime = N
               for song in response["result"]["entry"]]
     return result
 
+def collect_channels(channels: dict):
+    for path, channel in channels.items():
+        redis.set(f"channels:{path}:metadata", json.dumps({
+            "type": "playlist",
+            "name": channel["title"] + (" | bigFM" if "bigfm" not in channel["title"].lower() else ""),
+            "description": channel["intro"]["text"]["value"].strip(),
+            "url": f"https://www.bigfm.de{path}",
+            "image": channel["intro"]["image"]["image"]["uri"]["url"],
+            "last_run": datetime.datetime.now(datetime.UTC).timestamp(),
+            "invisible": True
+        }))
+        today = datetime.datetime.now(datetime.UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        songs = get_songs(channel["streamId"], today - datetime.timedelta(hours=24), today)
+        redis.rpush(f"channels:{path}:songs", *[json.dumps(song) for song in songs])
+        redis.set(f"channels:{path}:updated", datetime.datetime.now(datetime.UTC).timestamp())
 
-def set_redis(data):
+
+def add_metadata(data):
     metadata = {
-        "name": "BigFM",
+        "type": "category",
+        "name": "bigFM",
         "description": "Deutschlands biggste Beats",
         "url": "https://www.bigfm.de/",
         "image": "https://file.atsw.de/production/static/1729071412751/ab66799083e298839f274a7a8dd9fa15.svg",
@@ -69,26 +86,27 @@ def set_redis(data):
     }
     redis.set(f"metadata", json.dumps(metadata))
     for section, channels in data.items():
-        redis.set(f"{section[0]}:metadata", json.dumps({
+        redis.set(f"metadata:{section[0]}:metadata", json.dumps({
+            "type": "category",
             "title": section[1],
             "last_run": datetime.datetime.now(datetime.UTC).timestamp()
         }))
         for path, channel in channels.items():
-            redis.set(f"{section[0]}:{path}:metadata", json.dumps({
-                "name": channel["title"],
-                "description": channel["intro"]["text"]["value"].strip(),
-                "url": f"https://www.bigfm.de/{path}",
-                "image": channel["intro"]["image"]["image"]["uri"]["url"],
-                "last_run": datetime.datetime.now(datetime.UTC).timestamp()
+            redis.set(f"metadata:{section[0]}:{path}:metadata", json.dumps({
+                "reference": f"channels:{redis.prefix}:{path}",
+                "name": channel["title"],  # use default name
+                "invisible": False
             }))
-            redis_path = f"{section[0]}:{path}"
-            today = datetime.datetime.now(datetime.UTC).replace(hour=0, minute=0, second=0, microsecond=0)
-            songs = get_songs(channel["streamId"], today - datetime.timedelta(hours=24), today)
-            redis.rpush(f"{redis_path}:songs", *[json.dumps(song) for song in songs])
-            redis.set(f"{redis_path}:updated", datetime.datetime.now(datetime.UTC).timestamp())
-        redis.set(f"{section[0]}:updated", datetime.datetime.now(datetime.UTC).timestamp())
-    redis.set(f"updated", datetime.datetime.now(datetime.UTC).timestamp())
+
+
+def main():
+    data = scrape_channels()
+    all_channels = {}
+    for channels in data.values():
+        all_channels.update(channels)
+    collect_channels(all_channels)
+    add_metadata(data)
 
 
 if __name__ == "__main__":
-    print(set_redis(scrape_channels()))
+    main()

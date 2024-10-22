@@ -8,7 +8,7 @@ cache = dict()
 
 class RedisManager:
     def __init__(self, prefix=""):
-        self.prefix = prefix + ":"
+        self.prefix = prefix + ":" if prefix else ""
         self.used_keys = set()
         self.redis = redis.Redis(**config["connection"])
 
@@ -55,9 +55,9 @@ class RedisManager:
         name = self.prefix + name if use_prefix else name
         self.redis.expire(self.prefix + name, ex)
 
-    def get_song_keys(self):
+    def get_keys(self, endswith=""):
         """
         Get all song lists.
         :return:
         """
-        return self.redis.keys("*:songs")
+        return self.redis.keys(f"*:{endswith}")

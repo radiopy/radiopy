@@ -5,7 +5,7 @@ import spotipy
 from spotipy import SpotifyOAuth
 
 from config import config
-from src.redis_manager import RedisManager, cache
+from src.redis_manager import RedisManager
 
 redis = RedisManager("cache")
 spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(**config["spotify"],
@@ -30,8 +30,14 @@ def search_song(title, artists: str = None, item_id: str = None):
     :param item_id:
     :return:
     """
-    search_term = f"track:{title.strip()}" + (f" artist:{artists.strip()}" if artists else "")
-    key = hashlib.sha1((item_id or title).encode()).hexdigest()
+    search_term = f"track:{title.lower().strip()}" + (f" artist:{artists.lower().strip()}" if artists else "")
+    if item_id:
+        id_key = hashlib.sha1(item_id.encode()).hexdigest()
+        result = redis.get(id_key)
+        # quick fix for adding cache entries
+        if result:
+            return json.loads(result)["spotify_id"]
+    key = hashlib.sha1(search_term.encode()).hexdigest()
     result = redis.get(key)
     if result:
         return json.loads(result)["spotify_id"]
@@ -58,7 +64,11 @@ def search_song(title, artists: str = None, item_id: str = None):
             "search_term": search_term
         }
     redis.set(key, json.dumps(cache_entry))
+    if item_id:
+        # noinspection PyUnboundLocalVariable
+        redis.set(id_key, json.dumps(cache_entry))
     return cache_entry["spotify_id"]
+
 
 def get_all_songs(key):
     """
@@ -80,7 +90,7 @@ def get_all_songs(key):
 
 
 def main():
-    for key in redis.get_song_keys():
+    for key in redis.get_keys("songs"):
         songs = get_all_songs(key)
         if songs:
             redis.rpush(key[:-6] + ":queue", *songs, use_prefix=False)
