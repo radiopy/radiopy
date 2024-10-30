@@ -20,14 +20,16 @@ def create_playlists():
     mapping = json.loads(redis.get("mapping") or "{}")
 
     # ensure that all playlists exist
-    for key in redis.get_keys("queue"):
-        key = key[:-6]
+    for key in redis.get_keys("metadata"):
+        key = key[:-9]
         if key in mapping:
             continue
         metadata = redis.get(f"{key}:metadata")
         if not metadata:
             continue
         metadata = json.loads(metadata)
+        if metadata["type"] != "playlist":
+            continue
         playlist = spotify.user_playlist_create(user,
                                                 metadata["name"],
                                                 public=True,
