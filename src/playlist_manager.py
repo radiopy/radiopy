@@ -28,7 +28,7 @@ def create_playlists():
         if not metadata:
             continue
         metadata = json.loads(metadata)
-        if metadata["type"] != "playlist":
+        if metadata.get("type") != "playlist":
             continue
         playlist = spotify.user_playlist_create(user,
                                                 metadata["name"],
@@ -87,6 +87,8 @@ def refresh_songs():
     mapping = json.loads(redis.get("mapping") or "{}")
     for key in mapping:
         queue = redis.redis.lrange(f"{key}:queue", 0, -1)
+        # remove duplicates using set
+        queue = list(set(queue))
         spotify.playlist_replace_items(mapping[key], queue[:100])
         # add remaining songs from queue
         for index in range(100, len(queue), 100):
@@ -97,11 +99,11 @@ def refresh_songs():
 
 
 if __name__ == "__main__":
-    print("delete")
+    print("delete playlists")
     delete_playlists()
-    print("create")
+    print("create playlists")
     create_playlists()
-    print("refresh m")
+    print("refresh metadata")
     refresh_metadata()
-    print("refresh s")
+    print("refresh songs")
     refresh_songs()

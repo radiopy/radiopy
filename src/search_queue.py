@@ -34,7 +34,6 @@ def search_song(title, artists: str = None, item_id: str = None):
     if item_id:
         id_key = hashlib.sha1(item_id.encode()).hexdigest()
         result = redis.get(id_key)
-        # quick fix for adding cache entries
         if result:
             return json.loads(result)["spotify_id"]
     key = hashlib.sha1(search_term.encode()).hexdigest()
@@ -90,7 +89,9 @@ def get_all_songs(key):
 
 
 def main():
-    for key in redis.get_keys("songs"):
+    keys = redis.get_keys("songs")
+    for index, key in enumerate(keys):
+        print(index + 1, "/", len(keys), key)
         songs = get_all_songs(key)
         if songs:
             redis.rpush(key[:-6] + ":queue", *songs, use_prefix=False)

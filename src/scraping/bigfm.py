@@ -11,18 +11,18 @@ session = requests.Session()
 
 
 def scrape_channels():
+    print("Scraping metadata...")
     response = session.get(f"{BASE_URL}/webradio/uebersicht-bigfm").json()
 
     sections = [section for section in response["sections"] if section["type"] == "teaser"]
     channels = {channel["path"]["alias"]: channel for section in sections for channel in section["teasers"]}
     for index, path in enumerate(channels):
-        print(index + 1, "/", len(channels), end="\r")
+        print(index + 1, "/", len(channels), path)
         ch_response = session.get(f"{BASE_URL}/{path}").json()
         for section in ch_response["sections"]:
             if "stream" not in section or section["type"] != "stream":
                 continue
             channels[path]["streamId"] = int(section["stream"]["stream"])
-    print()
 
     result = {}
     for section in sections:
@@ -59,7 +59,10 @@ def get_songs(station: int, start: datetime.datetime, end: datetime.datetime = N
     return result
 
 def collect_channels(channels: dict):
-    for path, channel in channels.items():
+    print("Collecting channel songs...")
+    for index, item in enumerate(channels.items()):
+        path, channel = item
+        print(index + 1, "/", len(channels), path)
         redis.set(f"channels:{path}:metadata", json.dumps({
             "type": "playlist",
             "name": channel["title"] + (" | bigFM" if "bigfm" not in channel["title"].lower() else ""),
@@ -93,7 +96,7 @@ def add_metadata(data):
         }))
         for path, channel in channels.items():
             redis.set(f"metadata:{section[0]}:{path}:metadata", json.dumps({
-                "reference": f"channels:{redis.prefix}:{path}",
+                "reference": f"{redis.prefix}channels:{path}",
                 "name": channel["title"],  # use default name
                 "invisible": False
             }))
