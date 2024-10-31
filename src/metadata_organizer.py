@@ -16,6 +16,11 @@ def get_all_metadata():
             result[key] = json.loads(metadata)
     return result
 
+def add_playlist_mapping(metadata):
+    mapping = json.loads(redis.get("mapping") or "{}")
+    for key, value in mapping.items():
+        metadata[key]["playlist"] = value
+
 def resolve_references(metadata):
     repeat = True
     max_repeats = 100
@@ -73,6 +78,7 @@ def categorize_metadata(metadata):
 
 def main():
     metadata = get_all_metadata()
+    metadata = add_playlist_mapping(metadata)
     metadata = resolve_references(metadata)
     print(json.dumps(categorize_metadata(metadata), indent=2))
 
