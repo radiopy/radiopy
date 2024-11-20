@@ -3,21 +3,24 @@ import json
 import datetime
 
 from src.redis_manager import RedisManager
+from src.log_setup import logging
 
 BASE_URL = "https://www.bigfm.de/api"
 
+
+logger = logging.getLogger(__name__)
 redis = RedisManager("scraping:bigfm")
 session = requests.Session()
 
 
 def scrape_channels():
-    print("Scraping metadata...")
+    logger.info("Scraping metadata...")
     response = session.get(f"{BASE_URL}/webradio/uebersicht-bigfm").json()
 
     sections = [section for section in response["sections"] if section["type"] == "teaser"]
     channels = {channel["path"]["alias"]: channel for section in sections for channel in section["teasers"]}
     for index, path in enumerate(channels):
-        print(index + 1, "/", len(channels), path)
+        logger.info(f"{index+1:02d}/{len(channels)}: {path}")
         ch_response = session.get(f"{BASE_URL}/{path}").json()
         for section in ch_response["sections"]:
             if "stream" not in section or section["type"] != "stream":
@@ -59,10 +62,10 @@ def get_songs(station: int, start: datetime.datetime, end: datetime.datetime = N
     return result
 
 def collect_channels(channels: dict):
-    print("Collecting channel songs...")
+    logger.info("Collecting channel songs...")
     for index, item in enumerate(channels.items()):
         path, channel = item
-        print(index + 1, "/", len(channels), path)
+        logger.info(f"{index+1:02d}/{len(channels)}: {path}")
         redis.set(f"channels:{path}:metadata", json.dumps({
             "type": "playlist",
             "name": channel["title"] + (" | bigFM" if "bigfm" not in channel["title"].lower() else ""),

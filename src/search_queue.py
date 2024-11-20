@@ -1,16 +1,33 @@
+import argparse
 import hashlib
 import json
+import time
 
 import spotipy
 from spotipy import SpotifyOAuth
 
 from config import config
 from src.redis_manager import RedisManager
+from src.log_setup import logging
 
+logger = logging.getLogger(__name__)
 redis = RedisManager("cache")
 spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(**config["spotify"],
                                                     cache_handler=spotipy.RedisCacheHandler(redis.redis)))
 
+
+def get_timeout() -> [int, None]:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c",
+                        "--cron",
+                        help="Stop the script after a certain amount of time",
+                        type=int,
+                        default=0)
+    cron = parser.parse_args().cron
+    if cron:
+        return cron + int(time.time())
+
+TIMEOUT = get_timeout()
 
 def fetch_songs(key):
     """
@@ -43,7 +60,7 @@ def search_song(title, artists: str = None, item_id: str = None):
     results = spotify.search(search_term, limit=1, type="track")["tracks"]["items"]
     # edge case. For some reason it works when I send another request
     if results == [None]:
-        print("edge case")
+        logger.warning("Spotify search returned [None]. Trying again.")
         results = spotify.search(search_term, limit=1, type="track")["tracks"]["items"]
     if results:
         cache_entry = {
@@ -53,7 +70,7 @@ def search_song(title, artists: str = None, item_id: str = None):
             "spotify_id": results[0]["id"],
             "search_term": search_term
         }
-        print(results[0]["id"])
+        logger.info(f"Found song: {results[0]['id']}")
     else:
         cache_entry = {
             "title": title,
@@ -77,21 +94,26 @@ def get_all_songs(key):
     """
     songs = []
     queue = fetch_songs(key)
-    for song in queue:
-        song = json.loads(song)
+    index = 0
+    for index, song in enumerate(queue):
+        if TIMEOUT and TIMEOUT < int(time.time() - 10):
+            logger.info("Timeout reached. Stopping.")
+            break
 
+        song = json.loads(song)
         song = search_song(song["title"], song.get("artists"), song.get("id"))
         if song:
             songs.append(song)
     # delete amount of songs from redis key (in case more get added)
-    redis.redis.ltrim(key, len(queue), -1)
+    if index:
+        redis.redis.ltrim(key, index + 1, -1)
     return songs
 
 
 def main():
     keys = redis.get_keys("songs")
     for index, key in enumerate(keys):
-        print(index + 1, "/", len(keys), key)
+        logger.info(f"{index+1:02d}/{len(keys)}: {key}")
         songs = get_all_songs(key)
         if songs:
             redis.rpush(key[:-6] + ":queue", *songs, use_prefix=False)

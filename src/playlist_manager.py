@@ -4,9 +4,11 @@ import spotipy
 
 from config import config
 from src.redis_manager import RedisManager
+from src.log_setup import logging
 
+
+logger = logging.getLogger(__name__)
 redis = RedisManager()
-
 spotify = spotipy.Spotify(auth_manager=spotipy.SpotifyOAuth(**config["spotify"],
                                                             cache_handler=spotipy.RedisCacheHandler(redis.redis)))
 user = spotify.me()["id"]
@@ -30,6 +32,7 @@ def create_playlists():
         metadata = json.loads(metadata)
         if metadata.get("type") != "playlist":
             continue
+        logger.info("creating playlist", metadata["name"])
         playlist = spotify.user_playlist_create(user,
                                                 metadata["name"],
                                                 public=True,
@@ -59,9 +62,11 @@ def delete_playlists():
         if redis.get(f"{key}:metadata"):
             # ensure that we still follow the playlist
             if not following:
+                logger.info("following playlist", mapping[key])
                 spotify.current_user_follow_playlist(mapping[key])
         else:
             if following:
+                logger.info("unfollowing playlist", mapping[key])
                 spotify.current_user_unfollow_playlist(mapping[key])
             # don't delete the mapping, wait for Spotify to delete the playlist first
 
@@ -72,6 +77,7 @@ def refresh_metadata():
     :return:
     """
     mapping = json.loads(redis.get("mapping") or "{}")
+    logger.info(f"refreshing {len(mapping)} playlists")
     for key in mapping:
         metadata = json.loads(redis.get(f"{key}:metadata"))
         spotify.playlist_change_details(playlist_id=mapping[key],
@@ -89,8 +95,10 @@ def refresh_songs():
         queue = redis.redis.lrange(f"{key}:queue", 0, -1)
         # remove duplicates using set
         queue = list(set(queue))
+        logger.info("refreshing", len(queue), "songs for", key)
+        # add first 100 songs to playlist in one go (Spotify limits this to 100)
         spotify.playlist_replace_items(mapping[key], queue[:100])
-        # add remaining songs from queue
+        # add remaining songs from queue in chunks of 100
         for index in range(100, len(queue), 100):
             spotify.playlist_add_items(mapping[key], queue[index:index + 100])
 
@@ -99,11 +107,11 @@ def refresh_songs():
 
 
 if __name__ == "__main__":
-    print("delete playlists")
+    logger.info("delete playlists")
     delete_playlists()
-    print("create playlists")
+    logger.info("create playlists")
     create_playlists()
-    print("refresh metadata")
+    logger.info("refresh metadata")
     refresh_metadata()
-    print("refresh songs")
+    logger.info("refresh songs")
     refresh_songs()
