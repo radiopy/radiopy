@@ -1,0 +1,14 @@
+# makes sure that python can be found
+PATH=/usr/bin:/bin:/usr/local/bin
+
+# PWD can't be set in crontab, using HOME instead (cron sets PWD to HOME before executing commands)
+HOME=/app
+
+# working directory for Python
+PYTHONPATH=/app
+PYTHONUNBUFFERED=1
+
+# scripts go here
+@reboot python /app/src/scraping/bigfm.py
+*/10 * * * * python /app/src/search_queue.py --cron 10
+@reboot sleep 120 && python /app/src/playlist_manager.py

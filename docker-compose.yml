@@ -1,0 +1,9 @@
+services:
+  scheduler:
+    build: .
+    container_name: radiopy-scheduler
+    volumes:
+      - ./config.toml:/app/config.toml
+      # - ./cronfile:/app/cronfile  # use this if you want to use a custom cronfile
+    environment:
+      - PYTHONUNBUFFERED=1
