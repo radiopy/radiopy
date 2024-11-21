@@ -4,8 +4,8 @@ import sys
 
 script_name = os.path.basename(sys.argv[0])
 logging.basicConfig(level=logging.INFO,
-                    filename="./radiopy.log",
-                    format=f"%(asctime)s - {script_name}:%(name)s - %(levelname)s - %(message)s")
+                    format=f"%(asctime)s - {script_name}:%(name)s - %(levelname)s - %(message)s",
+                    handlers=[logging.StreamHandler(), logging.FileHandler("./radiopy.log")])
 
 # catch errors
 def handle_exception(exc_type, exc_value, exc_traceback):

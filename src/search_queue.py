@@ -25,7 +25,7 @@ def get_timeout() -> [int, None]:
                         default=0)
     cron = parser.parse_args().cron
     if cron:
-        return cron + int(time.time())
+        return (cron * 60) + int(time.time())
 
 TIMEOUT = get_timeout()
 
