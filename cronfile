@@ -9,6 +9,6 @@ PYTHONPATH=/app
 PYTHONUNBUFFERED=1
 
 # scripts go here
-@reboot python /app/src/scraping/bigfm.py
-*/10 * * * * python /app/src/search_queue.py --cron 10
-@reboot sleep 120 && python /app/src/playlist_manager.py
+@reboot flock -n /tmp/scraping.bigfm.lock python /app/src/scraping/bigfm.py
+*/10 * * * * flock -n /tmp/search_queue.lock python /app/src/search_queue.py
+@reboot sleep 120 && flock -n /tmp/playlist_manager.lock python /app/src/playlist_manager.py

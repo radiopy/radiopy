@@ -1,33 +1,18 @@
-import argparse
 import hashlib
 import json
-import time
 
 import spotipy
 from spotipy import SpotifyOAuth
 
 from config import config
-from src.redis_manager import RedisManager
 from src.log_setup import logging
+from src.redis_manager import RedisManager
 
 logger = logging.getLogger(__name__)
 redis = RedisManager("cache")
 spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(**config["spotify"],
                                                     cache_handler=spotipy.RedisCacheHandler(redis.redis)))
 
-
-def get_timeout() -> [int, None]:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c",
-                        "--cron",
-                        help="Stop the script after a certain amount of time",
-                        type=int,
-                        default=0)
-    cron = parser.parse_args().cron
-    if cron:
-        return (cron * 60) + int(time.time())
-
-TIMEOUT = get_timeout()
 
 def fetch_songs(key):
     """
@@ -94,26 +79,21 @@ def get_all_songs(key):
     """
     songs = []
     queue = fetch_songs(key)
-    index = 0
-    for index, song in enumerate(queue):
-        if TIMEOUT and TIMEOUT < int(time.time() - 10):
-            logger.info("Timeout reached. Stopping.")
-            break
-
+    for song in queue:
         song = json.loads(song)
         song = search_song(song["title"], song.get("artists"), song.get("id"))
         if song:
             songs.append(song)
-    # delete amount of songs from redis key (in case more get added)
-    if index:
-        redis.redis.ltrim(key, index + 1, -1)
+    # only delete amount of songs from redis list (in case more get added while processing)
+    if queue:
+        redis.redis.ltrim(key, len(queue), -1)
     return songs
 
 
 def main():
     keys = redis.get_keys("songs")
     for index, key in enumerate(keys):
-        logger.info(f"{index+1:02d}/{len(keys)}: {key}")
+        logger.info(f"{index + 1:02d}/{len(keys)}: {key}")
         songs = get_all_songs(key)
         if songs:
             redis.rpush(key[:-6] + ":queue", *songs, use_prefix=False)
