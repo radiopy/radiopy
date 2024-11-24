@@ -1,7 +1,26 @@
 services:
   scheduler:
     build: .
+    image: ghcr.io/radiopy/radiopy:latest
     container_name: radiopy-scheduler
-    volumes:
-      - ./config.toml:/app/config.toml
+    environment:
+      RADIOPY_CONFIG: |
+        [redis]
+        expiration = 1209600  # 2 weeks
+
+        [redis.connection]
+        host = "example.com"
+        port = 6379
+        username = "username"
+        password = "password"
+        decode_responses = true
+
+        [spotify]
+        client_id = "client_id"
+        client_secret = "client_secret"
+        redirect_uri = "http://127.0.0.1:8080/callback"
+        scope = "playlist-modify-private playlist-modify-public"
+
+    # volumes:
+      # - ./config.toml:/app/config.toml  # alternative to using environment variables
       # - ./cronfile:/app/cronfile  # use this if you want to use a custom cronfile
