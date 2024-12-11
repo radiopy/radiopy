@@ -19,6 +19,7 @@ def create_playlists():
     Create playlists from the redis queue.
     :return:
     """
+    # TODO: make sure that mapping doesn't expire
     mapping = json.loads(redis.get("mapping") or "{}")
 
     # ensure that all playlists exist
@@ -26,7 +27,7 @@ def create_playlists():
         key = key[:-9]
         if key in mapping:
             continue
-        metadata = redis.get(f"{key}:metadata")
+        metadata = redis.get(f"{key}:metadata", auto_extend=False)
         if not metadata:
             continue
         metadata = json.loads(metadata)
@@ -59,7 +60,7 @@ def delete_playlists():
             del mapping[key]
             redis.set("mapping", json.dumps(mapping))
             continue
-        if redis.get(f"{key}:metadata"):
+        if redis.get(f"{key}:metadata", auto_extend=False):
             # ensure that we still follow the playlist
             if not following:
                 logger.info("following playlist", mapping[key])
@@ -79,7 +80,7 @@ def refresh_metadata():
     mapping = json.loads(redis.get("mapping") or "{}")
     logger.info(f"refreshing {len(mapping)} playlists")
     for key in mapping:
-        metadata = json.loads(redis.get(f"{key}:metadata"))
+        metadata = json.loads(redis.get(f"{key}:metadata", auto_extend=False))
         spotify.playlist_change_details(playlist_id=mapping[key],
                                         description="radiopy.github.io | " + metadata["description"],
                                         name=metadata["name"])
