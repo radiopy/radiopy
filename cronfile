@@ -10,7 +10,7 @@ PYTHONUNBUFFERED=1
 
 # scripts go here
 */5 * * * * flock -n /tmp/search_queue.lock python /app/src/search_queue.py
-30 2 * * * flock -n /tmp/playlist_manager.lock python /app/src/playlist_manager.py
+30 2 * * 1 flock -n /tmp/playlist_manager.lock python /app/src/playlist_manager.py
 
 # scraping scripts go here
 # using random minutes to avoid scraping all at the same time
