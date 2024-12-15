@@ -1,8 +1,9 @@
-from src.log_setup import logging
-import requests
-import json
 import datetime
+import json
 
+import requests
+
+from src.log_setup import logging
 from src.redis_manager import RedisManager
 
 BASE_URL = "https://www.bigfm.de/api"

@@ -15,8 +15,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the rest of the application code
-COPY ./cronfile ./entrypoint.sh ./
-RUN chmod +x ./entrypoint.sh
+COPY ./cronfile ./entrypoint.sh ./login.sh ./
+RUN chmod +x ./entrypoint.sh ./login.sh
 COPY ./src ./src
 
 # Run the command on container startup

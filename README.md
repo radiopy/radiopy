@@ -1,3 +1,29 @@
+# Radiopy
+
+Radiopy is a set of Python scripts that fetches playlists from various radio stations and feeds them into Spotify playlists.
+The project is still in its early stages and only supports a few radio stations.
+
+## Setup
+
+The easiest way to run the scripts is to use Docker. You can use the `docker-compose.yml` file to run the container.
+
+```bash
+docker-compose up -d  # Start the container in the background
+docker-compose exec scheduler ./login.sh  # Login to Spotify
+```
+Make sure to restart the container after logging in to Spotify if the scheduler has already started a script.
+
+By default, the script will add a new playlist for each radio station/channel and update the playlist every week.
+You can change this behaviour by modifying the `cronfile` and adding a volume mapping to the `docker-compose.yml` file.
+
+```yaml
+    volumes:
+      - ./cronfile:/app/cronfile  # use this if you want to use a custom cronfile
+```
+
+## Supported Radio Stations
+- [bigFM](https://www.bigfm.de/) (uses [Regiocast](#regiocast) API)
+
 ## Upcoming Radio Stations
 
 ### [Antenne Bayern](https://www.antenne.de/)
@@ -15,8 +41,7 @@
 - [flow/now](https://asw.api.iris.radiorepo.io/v2/playlist/flow.json?station=110&offset=1&count=1&ts=1716636546730)
 
 Regiocast has many endpoints. Mostly radiorepo.io and loverad.io. Both have many subdomains.
-
-
+It seems that the endpoint completely ignores timezones and uses the server's timezone. Probably Europe/Berlin.
 
 #### Radio Stations
 - [Radio Bob!](https://www.radiobob.de/)
