@@ -42,7 +42,8 @@ def search_song(title, artists: str = None, item_id: str = None):
     result = redis.get(key)
     if result:
         return json.loads(result)["spotify_id"]
-    results = spotify.search(search_term, limit=1, type="track")["tracks"]["items"]
+    # the search API can't handle percent signs, so we need to escape them (even if requests does it too)
+    results = spotify.search(search_term.replace("%", "%25"), limit=1, type="track")["tracks"]["items"]
     # edge case. For some reason it works when I send another request
     if results == [None]:
         logger.warning("Spotify search returned [None]. Trying again.")
