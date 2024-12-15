@@ -13,7 +13,8 @@ redis = RedisManager()
 logger = logging.getLogger(__name__)
 
 spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(**config["spotify"],
-                                                    cache_handler=spotipy.RedisCacheHandler(redis.redis)))
+                                                    cache_handler=spotipy.RedisCacheHandler(redis.redis),
+                                                    open_browser=False))
 
 while True:
     user = spotify.me()
