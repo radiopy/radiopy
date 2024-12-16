@@ -15,3 +15,6 @@ PYTHONUNBUFFERED=1
 # scraping scripts go here
 # using random minutes to avoid scraping all at the same time
 29 0 * * * flock -n /tmp/scraping.bigfm.lock python /app/src/scraping/bigfm.py
+
+*/2 * * * * flock -n /tmp/scraping.antenne.lock python /app/src/scraping/antenne.py --songs
+36 0 * * 1 flock -n /tmp/scraping.antenne.lock python /app/src/scraping/antenne.py --metadata

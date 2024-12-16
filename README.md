@@ -23,13 +23,10 @@ You can change this behaviour by modifying the `cronfile` and adding a volume ma
 
 ## Supported Radio Stations
 - [bigFM](https://www.bigfm.de/) (uses [Regiocast](#regiocast) API)
+- [Antenne Bayern](https://www.antenne.de/)
 
 ## Upcoming Radio Stations
 
-### [Antenne Bayern](https://www.antenne.de/)
-#### Status: Found endpoint
-- [Channel Metadata](https://www.antenne.de/api/channels)
-- [Current Songs](https://www.antenne.de/api/metadata/now)
 
 ### [FFH](https://www.ffh.de/)
 #### Status: Found endpoint
