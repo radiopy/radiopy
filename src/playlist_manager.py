@@ -96,7 +96,7 @@ def refresh_songs():
         queue = redis.redis.lrange(f"{key}:queue", 0, -1)
         # remove duplicates using set
         queue = list(set(queue))
-        logger.info("refreshing", len(queue), "songs for", key)
+        logger.info(f"refreshing {len(queue)} songs for {key}")
         # add first 100 songs to playlist in one go (Spotify limits this to 100)
         spotify.playlist_replace_items(mapping[key], queue[:100])
         # add remaining songs from queue in chunks of 100
