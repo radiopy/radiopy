@@ -52,7 +52,7 @@ def delete_playlists():
     :return:
     """
     mapping = json.loads(redis.get("mapping") or "{}")
-    for key in mapping:
+    for key in mapping.copy():
         try:
             following = spotify.playlist_is_following(playlist_id=mapping[key], user_ids=[user])[0]
         except spotipy.SpotifyException:
