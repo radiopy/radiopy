@@ -1,3 +1,5 @@
+import ftplib
+from io import BytesIO
 import json
 
 import spotipy
@@ -81,7 +83,15 @@ def main():
     metadata = get_all_metadata()
     metadata = add_playlist_mapping(metadata)
     metadata = resolve_references(metadata)
-    print(json.dumps(categorize_metadata(metadata), indent=2, ensure_ascii=False))
+    metadata = categorize_metadata(metadata)
+    if "ftp" in config:
+        config = config["ftp"]
+        with ftplib.FTP_TLS(config["hostname"], config["username"], config["password"]) as session:
+            session.prot_p()
+            session.storbinary("STOR metadata.json", 
+                               BytesIO(json.dumps(metadata, separators=(",", ":"), ensure_ascii=False)))
+    else:
+        print(json.dumps(metadata, indent=2, ensure_ascii=False))
 
 if __name__ == "__main__":
     main()
