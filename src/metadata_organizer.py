@@ -1,13 +1,14 @@
 import ftplib
-from io import BytesIO
 import json
+from io import BytesIO
 
-import spotipy
-
-from config import config
+from src.config import config
 from src.redis_manager import RedisManager
 
+config = config.get("ftp")
+
 redis = RedisManager()
+
 
 def get_all_metadata():
     keys = redis.get_keys("metadata")
@@ -18,11 +19,13 @@ def get_all_metadata():
             result[key] = json.loads(metadata)
     return result
 
+
 def add_playlist_mapping(metadata):
     mapping = json.loads(redis.get("mapping") or "{}")
     for key, value in mapping.items():
         metadata[key + ":metadata"]["playlist"] = value
     return metadata
+
 
 def resolve_references(metadata):
     repeat = True
@@ -48,6 +51,7 @@ def resolve_references(metadata):
             del value["invisible"]
 
     return metadata
+
 
 def categorize_metadata(metadata):
     result = {}
@@ -79,19 +83,21 @@ def categorize_metadata(metadata):
             del item["children"]
     return result
 
+
 def main():
     metadata = get_all_metadata()
     metadata = add_playlist_mapping(metadata)
     metadata = resolve_references(metadata)
     metadata = categorize_metadata(metadata)
-    if "ftp" in config:
-        config = config["ftp"]
+    metadata = list(metadata.values())
+    if config:
         with ftplib.FTP_TLS(config["hostname"], config["username"], config["password"]) as session:
             session.prot_p()
-            session.storbinary("STOR metadata.json", 
-                               BytesIO(json.dumps(metadata, separators=(",", ":"), ensure_ascii=False)))
+            session.storbinary("STOR metadata.json",
+                               BytesIO(json.dumps(metadata, separators=(",", ":"), ensure_ascii=False).encode("utf-8")))
     else:
         print(json.dumps(metadata, indent=2, ensure_ascii=False))
+
 
 if __name__ == "__main__":
     main()

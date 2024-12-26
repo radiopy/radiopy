@@ -1,5 +1,7 @@
 [redis]
 expiration = 1209600  # 2 weeks
+# cache_databsase is optional. If not present, the cache will be stored in the default database.
+cache_database = 1
 
 [redis.connection]
 host = "example.com"
@@ -14,7 +16,7 @@ client_secret = "client_secret"
 redirect_uri = "http://127.0.0.1:8080/callback"
 scope = "playlist-modify-private playlist-modify-public"
 
-[ftp]
+[ftp]  # optinal category
 hostname = "ftp.example.com"
 username = "username"
 password = "password"

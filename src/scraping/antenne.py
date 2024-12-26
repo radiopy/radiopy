@@ -88,8 +88,8 @@ def get_metadata():
             path = f"channels:{channel['stream']['mountpoint']}"
             redis.set(f"{path}:metadata", json.dumps(data))
 
-            metadata = {
-                "reference": path,
+            data = {
+                "reference": f"{redis.prefix}{path}",
                 "name": channel["title"],
                 "description": channel["description"],
                 "url": channel["website"],

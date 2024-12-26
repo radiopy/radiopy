@@ -62,7 +62,7 @@ There are no plans to analyse this data. Yet.
 ### `cache:<SHA1 hash>`
 
 Key Type: `string`
-Used to cache search results from Spotify. The sha1 hash is retrieved by either using either the ID, if available, or
+Used to cache search results from Spotify. The sha1 hash is retrieved by either using the ID, if available, or
 the search term.
 
 ```json

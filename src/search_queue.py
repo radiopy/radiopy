@@ -6,12 +6,19 @@ from spotipy import SpotifyOAuth
 
 from config import config
 from src.log_setup import logging
-from src.redis_manager import RedisManager
+import src.redis_manager as redis_manager
 
 logger = logging.getLogger(__name__)
-redis = RedisManager("cache")
+
+redis = redis_manager.RedisManager()
 spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(**config["spotify"],
                                                     cache_handler=spotipy.RedisCacheHandler(redis.redis)))
+
+# making sure the cache is in a different database
+db = redis_manager.config.get("cache_database")
+if db is not None:
+    redis_manager.config["connection"]["db"] = db
+redis = redis_manager.RedisManager("cache")
 
 
 def fetch_songs(key):
