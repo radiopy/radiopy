@@ -14,7 +14,7 @@ def get_all_metadata():
     keys = redis.get_keys("metadata")
     result = {}
     for key in keys:
-        metadata = redis.get(key)
+        metadata = redis.get(key, auto_extend=False)
         if metadata:
             result[key] = json.loads(metadata)
     return result

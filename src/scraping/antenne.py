@@ -72,6 +72,15 @@ def get_metadata():
 
     # reverse order to have the more popular ones at the top (some stations get overwritten)
     for station in STATIONS[::-1]:
+        # create station metadata
+        data = {
+            "type": "category",
+            "name": station["name"],
+            "url": station["url"],
+            "image": station["image"],
+            "last_run": datetime.datetime.now(datetime.UTC).timestamp()
+        }
+        redis.set(f"metadata:{station['name']}:metadata", json.dumps(data))
         response = session.get(f"{station['url']}/api/channels").json()
         for channel in response["data"]:
             data = {

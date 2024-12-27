@@ -10,15 +10,15 @@ import src.redis_manager as redis_manager
 
 logger = logging.getLogger(__name__)
 
-redis = redis_manager.RedisManager()
+metadata = redis_manager.RedisManager()
 spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(**config["spotify"],
-                                                    cache_handler=spotipy.RedisCacheHandler(redis.redis)))
+                                                    cache_handler=spotipy.RedisCacheHandler(metadata.redis)))
 
 # making sure the cache is in a different database
 db = redis_manager.config.get("cache_database")
 if db is not None:
     redis_manager.config["connection"]["db"] = db
-redis = redis_manager.RedisManager("cache")
+search = redis_manager.RedisManager("cache")
 
 
 def fetch_songs(key):
@@ -27,7 +27,7 @@ def fetch_songs(key):
     :param key:
     :return:
     """
-    return redis.redis.lrange(key, 0, -1)
+    return metadata.redis.lrange(key, 0, -1)
 
 
 def search_song(title, artists: str = None, item_id: str = None):
@@ -42,11 +42,11 @@ def search_song(title, artists: str = None, item_id: str = None):
     search_term = f"track:{title.lower().strip()}" + (f" artist:{artists.lower().strip()}" if artists else "")
     if item_id:
         id_key = hashlib.sha1(item_id.encode()).hexdigest()
-        result = redis.get(id_key)
+        result = search.get(id_key)
         if result:
             return json.loads(result)["spotify_id"]
     key = hashlib.sha1(search_term.encode()).hexdigest()
-    result = redis.get(key)
+    result = search.get(key)
     if result:
         return json.loads(result)["spotify_id"]
     # the search API can't handle percent signs, so we need to escape them (even if requests does it too)
@@ -73,10 +73,10 @@ def search_song(title, artists: str = None, item_id: str = None):
             "spotify_id": None,
             "search_term": search_term
         }
-    redis.set(key, json.dumps(cache_entry))
+    search.set(key, json.dumps(cache_entry))
     if item_id:
         # noinspection PyUnboundLocalVariable
-        redis.set(id_key, json.dumps(cache_entry))
+        search.set(id_key, json.dumps(cache_entry))
     return cache_entry["spotify_id"]
 
 
@@ -95,17 +95,17 @@ def get_all_songs(key):
             songs.append(song)
     # only delete amount of songs from redis list (in case more get added while processing)
     if queue:
-        redis.redis.ltrim(key, len(queue), -1)
+        metadata.redis.ltrim(key, len(queue), -1)
     return songs
 
 
 def main():
-    keys = redis.get_keys("songs")
+    keys = metadata.get_keys("songs")
     for index, key in enumerate(keys):
         logger.info(f"{index + 1:02d}/{len(keys)}: {key}")
         songs = get_all_songs(key)
         if songs:
-            redis.rpush(key[:-6] + ":queue", *songs, use_prefix=False)
+            metadata.rpush(key[:-6] + ":queue", *songs, use_prefix=False)
 
 
 if __name__ == "__main__":
