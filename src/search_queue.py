@@ -42,11 +42,11 @@ def search_song(title, artists: str = None, item_id: str = None):
     search_term = f"track:{title.lower().strip()}" + (f" artist:{artists.lower().strip()}" if artists else "")
     if item_id:
         id_key = hashlib.sha1(item_id.encode()).hexdigest()
-        result = search.get(id_key)
+        result = search.get(id_key, auto_extend=False)
         if result:
             return json.loads(result)["spotify_id"]
     key = hashlib.sha1(search_term.encode()).hexdigest()
-    result = search.get(key)
+    result = search.get(key, auto_extend=False)
     if result:
         return json.loads(result)["spotify_id"]
     # the search API can't handle percent signs, so we need to escape them (even if requests does it too)

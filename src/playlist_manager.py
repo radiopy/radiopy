@@ -10,7 +10,10 @@ from src.log_setup import logging
 logger = logging.getLogger(__name__)
 redis = RedisManager()
 spotify = spotipy.Spotify(auth_manager=spotipy.SpotifyOAuth(**config["spotify"],
-                                                            cache_handler=spotipy.RedisCacheHandler(redis.redis)))
+                                                            cache_handler=spotipy.RedisCacheHandler(redis.redis)),
+                          # increase timeout to avoid constant errors
+                          requests_timeout=10,
+                          retries=5)
 user = spotify.me()["id"]
 
 
