@@ -63,16 +63,25 @@ def delete_playlists():
             del mapping[key]
             redis.set("mapping", json.dumps(mapping))
             continue
-        if redis.get(f"{key}:metadata", auto_extend=False):
-            # ensure that we still follow the playlist
-            if not following:
-                logger.info("following playlist", mapping[key])
-                spotify.current_user_follow_playlist(mapping[key])
+
+        delete = False
+        metadata = redis.get(f"{key}:metadata", auto_extend=False)
+        if not metadata:
+            delete = True
         else:
+            metadata = json.loads(metadata)
+            if metadata.get("type") != "playlist":
+                delete = True
+        if delete:
             if following:
                 logger.info("unfollowing playlist", mapping[key])
                 spotify.current_user_unfollow_playlist(mapping[key])
             # don't delete the mapping, wait for Spotify to delete the playlist first
+        else:
+            # ensure that we still follow the playlist
+            if not following:
+                logger.info("following playlist", mapping[key])
+                spotify.current_user_follow_playlist(mapping[key])
 
 
 def refresh_metadata():
