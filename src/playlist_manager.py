@@ -3,9 +3,8 @@ import json
 import spotipy
 
 from config import config
-from src.redis_manager import RedisManager
 from src.log_setup import logging
-
+from src.redis_manager import RedisManager
 
 logger = logging.getLogger(__name__)
 redis = RedisManager()

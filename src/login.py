@@ -4,6 +4,7 @@
 
 import spotipy
 from spotipy import SpotifyOAuth
+
 from src.config import config
 from src.log_setup import logging
 from src.redis_manager import RedisManager

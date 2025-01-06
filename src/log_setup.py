@@ -2,8 +2,10 @@ import logging
 import os
 import sys
 
+from src.config import config
+
 script_name = os.path.basename(sys.argv[0])
-logging.basicConfig(level=logging.WARNING,
+logging.basicConfig(level=config["logging"]["level"],
                     format=f"%(asctime)s - {script_name}:%(name)s - %(levelname)s - %(message)s",
                     handlers=[logging.StreamHandler(), logging.FileHandler("./radiopy.log")])
 

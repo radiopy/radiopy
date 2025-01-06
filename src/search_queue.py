@@ -4,15 +4,18 @@ import json
 import spotipy
 from spotipy import SpotifyOAuth
 
+import src.redis_manager as redis_manager
 from config import config
 from src.log_setup import logging
-import src.redis_manager as redis_manager
 
 logger = logging.getLogger(__name__)
 
 metadata = redis_manager.RedisManager()
 spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(**config["spotify"],
-                                                    cache_handler=spotipy.RedisCacheHandler(metadata.redis)))
+                                                    cache_handler=spotipy.RedisCacheHandler(metadata.redis)),
+                          # increase timeout to avoid constant errors
+                          requests_timeout=10,
+                          retries=5)
 
 # making sure the cache is in a different database
 db = redis_manager.config.get("cache_database")

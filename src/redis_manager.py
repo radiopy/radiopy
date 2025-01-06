@@ -6,6 +6,7 @@ config = config["redis"]
 
 cache = dict()
 
+
 class RedisManager:
     def __init__(self, prefix=""):
         self.prefix = prefix + ":" if prefix else ""

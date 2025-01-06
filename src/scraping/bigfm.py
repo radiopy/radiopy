@@ -8,7 +8,6 @@ from src.redis_manager import RedisManager
 
 BASE_URL = "https://www.bigfm.de/api"
 
-
 logger = logging.getLogger(__name__)
 redis = RedisManager("scraping:bigfm")
 session = requests.Session()
@@ -21,7 +20,7 @@ def scrape_channels():
     sections = [section for section in response["sections"] if section["type"] == "teaser"]
     channels = {channel["path"]["alias"]: channel for section in sections for channel in section["teasers"]}
     for index, path in enumerate(channels):
-        logger.info(f"{index+1:02d}/{len(channels)}: {path}")
+        logger.info(f"{index + 1:02d}/{len(channels)}: {path}")
         ch_response = session.get(f"{BASE_URL}/{path}").json()
         for section in ch_response["sections"]:
             if "stream" not in section or section["type"] != "stream":
@@ -62,11 +61,12 @@ def get_songs(station: int, start: datetime.datetime, end: datetime.datetime = N
               for song in response["result"]["entry"]]
     return result
 
+
 def collect_channels(channels: dict):
     logger.info("Collecting channel songs...")
     for index, item in enumerate(channels.items()):
         path, channel = item
-        logger.info(f"{index+1:02d}/{len(channels)}: {path}")
+        logger.info(f"{index + 1:02d}/{len(channels)}: {path}")
         redis.set(f"channels:{path}:metadata", json.dumps({
             "type": "playlist",
             "name": channel["title"] + (" | bigFM" if "bigfm" not in channel["title"].lower() else ""),
