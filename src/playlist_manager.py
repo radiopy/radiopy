@@ -16,13 +16,14 @@ spotify = spotipy.Spotify(auth_manager=spotipy.SpotifyOAuth(**config["spotify"],
 user = spotify.me()["id"]
 
 
-def create_playlists():
+def create_playlists(mapping=None):
     """
     Create playlists from the redis queue.
     :return:
     """
-    # TODO: make sure that mapping doesn't expire
-    mapping = json.loads(redis.get("mapping") or "{}")
+    if mapping is None:
+        # TODO: make sure that mapping doesn't expire
+        mapping = json.loads(redis.get("mapping") or "{}")
 
     # ensure that all playlists exist
     for key in redis.get_keys("metadata"):
@@ -45,15 +46,18 @@ def create_playlists():
         redis.set("mapping", json.dumps(mapping))
 
 
-def delete_playlists():
+def delete_playlists(mapping=None):
     """
     Has to be run before doing anything else that needs mapping.
     Ensure that a channel exists for each playlist.
     If not, the playlist will be unfollowed.
     After a playlist doesn't exist anymore, the mapping will be deleted too.
-    :return:
+    :return: A list with all mappings that aren't marked for deletion
     """
-    mapping = json.loads(redis.get("mapping") or "{}")
+    result = {}
+        if mapping is None:
+        # TODO: make sure that mapping doesn't expire
+        mapping = json.loads(redis.get("mapping") or "{}")
     for key in mapping.copy():
         try:
             following = spotify.playlist_is_following(playlist_id=mapping[key], user_ids=[user])[0]
@@ -77,18 +81,22 @@ def delete_playlists():
                 spotify.current_user_unfollow_playlist(mapping[key])
             # don't delete the mapping, wait for Spotify to delete the playlist first
         else:
+            result[key] = mapping[key]
             # ensure that we still follow the playlist
             if not following:
                 logger.info("following playlist", mapping[key])
                 spotify.current_user_follow_playlist(mapping[key])
+    return result
 
 
-def refresh_metadata():
+def refresh_metadata(mapping=None):
     """
     Refresh metadata for all playlists.
     :return:
     """
-    mapping = json.loads(redis.get("mapping") or "{}")
+    if mapping is None:
+        # TODO: make sure that mapping doesn't expire
+        mapping = json.loads(redis.get("mapping") or "{}")
     logger.info(f"refreshing {len(mapping)} playlists")
     for key in mapping:
         metadata = json.loads(redis.get(f"{key}:metadata", auto_extend=False))
@@ -97,12 +105,14 @@ def refresh_metadata():
                                         name=metadata["name"])
 
 
-def refresh_songs():
+def refresh_songs(mapping=None):
     """
     Refresh songs for all playlists.
     :return:
     """
-    mapping = json.loads(redis.get("mapping") or "{}")
+    if mapping is None:
+        # TODO: make sure that mapping doesn't expire
+        mapping = json.loads(redis.get("mapping") or "{}")
     for key in mapping:
         queue = redis.redis.lrange(f"{key}:queue", 0, -1)
         # remove duplicates using set
@@ -120,10 +130,10 @@ def refresh_songs():
 
 if __name__ == "__main__":
     logger.info("delete playlists")
-    delete_playlists()
+    remaining_mapping = delete_playlists()
     logger.info("create playlists")
-    create_playlists()
+    create_playlists(remaining_mapping)
     logger.info("refresh metadata")
-    refresh_metadata()
+    refresh_metadata(remaining_mapping)
     logger.info("refresh songs")
-    refresh_songs()
+    refresh_songs(remaining_mapping)
