@@ -55,7 +55,7 @@ def delete_playlists(mapping=None):
     :return: A list with all mappings that aren't marked for deletion
     """
     result = {}
-        if mapping is None:
+    if mapping is None:
         # TODO: make sure that mapping doesn't expire
         mapping = json.loads(redis.get("mapping") or "{}")
     for key in mapping.copy():
