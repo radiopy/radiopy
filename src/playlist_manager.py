@@ -115,6 +115,7 @@ def refresh_songs(mapping=None):
         mapping = json.loads(redis.get("mapping") or "{}")
     for key in mapping:
         queue = redis.redis.lrange(f"{key}:queue", 0, -1)
+        length = len(queue)
         # remove duplicates using set
         queue = list(set(queue))
         logger.info(f"refreshing {len(queue)} songs for {key}")
@@ -125,7 +126,7 @@ def refresh_songs(mapping=None):
             spotify.playlist_add_items(mapping[key], queue[index:index + 100])
 
         # delete processed songs from queue
-        redis.redis.ltrim(f"{key}:queue", len(queue), -1)
+        redis.redis.ltrim(f"{key}:queue", length, -1)
 
 
 if __name__ == "__main__":
