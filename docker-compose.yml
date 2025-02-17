@@ -14,10 +14,10 @@ services:
         cache_database = 1
 
         [redis.connection]
-        host = "example.com"
+        host = "redis"
         port = 6379
-        username = "username"
-        password = "password"
+        # username = "username"
+        # password = "password"
         decode_responses = true
 
         [spotify]
@@ -30,6 +30,18 @@ services:
         hostname = "ftp.example.com"
         username = "username"
         password = "password"
+
+  redis:
+    image: redis:latest
+    restart: always
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 30s
+      retries: 50
+      start_period: 30s
 
     # volumes:
       # - ./config.toml:/app/config.toml  # alternative to using environment variables
