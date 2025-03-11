@@ -93,13 +93,17 @@ def add_metadata(data):
     }
     redis.set(f"metadata", json.dumps(metadata))
     for section, channels in data.items():
-        redis.set(f"metadata:{section[0]}:metadata", json.dumps({
-            "type": "category",
-            "name": section[1],
-            "last_run": datetime.datetime.now(datetime.UTC).timestamp()
-        }))
+        key = "metadata"
+        # if category has no name, put the channels into the main category
+        if section[1] is not None:
+            key = f"{key}:{section[0]}"
+            redis.set(f"{key}:metadata", json.dumps({
+                "type": "category",
+                "name": section[1],
+                "last_run": datetime.datetime.now(datetime.UTC).timestamp()
+            }))
         for path, channel in channels.items():
-            redis.set(f"metadata:{section[0]}:{path}:metadata", json.dumps({
+            redis.set(f"{key}:{path}:metadata", json.dumps({
                 "reference": f"{redis.prefix}channels:{path}",
                 "name": channel["title"],  # use default name
                 "invisible": False
