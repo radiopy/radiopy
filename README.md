@@ -21,6 +21,14 @@ You can change this behaviour by modifying the `cronfile` and adding a volume ma
       - ./cronfile:/app/cronfile  # use this if you want to use a custom cronfile
 ```
 
+## Contributions welcome
+
+As this project has the potential to grow, all contributions are welcome!
+From correcting songs in playlists to implementing a new radio station.
+
+Feel free to contact me if you're not sure how or where to start.
+
+
 ## Supported Radio Stations
 - [bigFM](https://www.bigfm.de/) (uses [Regiocast](#regiocast) API)
 - [Antenne Bayern](https://www.antenne.de/)
