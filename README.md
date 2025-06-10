@@ -44,8 +44,15 @@ Feel free to contact me if you're not sure how or where to start.
 #### Status: Still figuring out
 - [search](https://asw.api.iris.radiorepo.io/v2/playlist/search.json?station=110&start=2024-11-20T20%3A53%3A55.631%2B01%3A00&end=2024-11-20T21%3A23%3A55.631%2B01%3A00)
 - [flow/now](https://asw.api.iris.radiorepo.io/v2/playlist/flow.json?station=110&offset=1&count=1&ts=1716636546730)
+- [smartradio](https://asw.api.iris.radiorepo.io/smartradio/2/config.json)
 
 Regiocast has many endpoints. Mostly radiorepo.io and loverad.io. Both have many subdomains.
+For example:
+- radiorepo.api.iris.radiorepo.io
+- asw.api.iris.radiorepo.io
+- dn1077.api.iris.radiorepo.io
+- sunshine.api.iris.radiorepo.io
+
 It seems that the endpoint completely ignores timezones and uses the server's timezone. Probably Europe/Berlin.
 
 #### Radio Stations
