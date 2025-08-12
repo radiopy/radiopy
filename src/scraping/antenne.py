@@ -38,11 +38,11 @@ STATIONS = [
         "url": "https://rockantenne.at",
         "image": "https://www.rockantenne.at/logos/station-rock-antenne-at/station.svg"
     },
-    {
-        "name": "ANTENNE NRW",
-        "url": "https://antenne.nrw",
-        "image": "https://www.antenne.nrw/logos/station-antenne-nrw/station.svg"
-    },
+#    {
+#        "name": "ANTENNE NRW",
+#        "url": "https://antenne.nrw",
+#        "image": "https://www.antenne.nrw/logos/station-antenne-nrw/station.svg"
+#    },
     {
         "name": "OLDIE ANTENNE",
         "url": "https://oldie-antenne.de",
