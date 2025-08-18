@@ -58,7 +58,7 @@ def get_songs(station: int, start: datetime.datetime, end: datetime.datetime = N
                "id": song["song"]["entry"][0]["guid"],
                "title": song["song"]["entry"][0]["title"],
                "artists": " ".join([artist["name"] for artist in song["song"]["entry"][0]["artist"]["entry"]])}
-              for song in response["result"]["entry"]]
+              for song in response["result"].get("entry", [])]
     return result
 
 
