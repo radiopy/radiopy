@@ -38,11 +38,11 @@ STATIONS = [
         "url": "https://rockantenne.at",
         "image": "https://www.rockantenne.at/logos/station-rock-antenne-at/station.svg"
     },
-#    {
-#        "name": "ANTENNE NRW",
-#        "url": "https://antenne.nrw",
-#        "image": "https://www.antenne.nrw/logos/station-antenne-nrw/station.svg"
-#    },
+    {
+        "name": "ANTENNE NRW",
+        "url": "https://antenne.nrw",
+        "image": "https://www.antenne.nrw/logos/station-antenne-nrw/station.svg"
+    },
     {
         "name": "OLDIE ANTENNE",
         "url": "https://oldie-antenne.de",
@@ -81,7 +81,11 @@ def get_metadata():
             "last_run": datetime.datetime.now(datetime.UTC).timestamp()
         }
         redis.set(f"metadata:{station['name']}:metadata", json.dumps(data))
-        response = session.get(f"{station['url']}/api/channels").json()
+        try:
+            response = session.get(f"{station['url']}/api/channels").json()
+        except Exception as e:
+            logger.error("Failed to fetch channels for %s: %s", station['name'], e)
+            continue
         for channel in response["data"]:
             data = {
                 "type": "playlist",
@@ -111,7 +115,11 @@ def get_songs():
     logger.info("Scraping songs...")
     mountpoints = []
     for station in STATIONS:
-        response = session.get(f"{station['url']}/api/metadata/now").json()
+        try:
+            response = session.get(f"{station['url']}/api/metadata/now").json()
+        except Exception as e:
+            logger.error("Failed to fetch songs for %s: %s", station['name'], e)
+            continue
         for channel in response["data"]:
             if channel["class"] != "Music" or channel["mountpoint"] in mountpoints:
                 continue
