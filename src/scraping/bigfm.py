@@ -78,7 +78,8 @@ def collect_channels(channels: dict):
         }))
         today = datetime.datetime.now(datetime.UTC).replace(hour=0, minute=0, second=0, microsecond=0)
         songs = get_songs(channel["streamId"], today - datetime.timedelta(hours=24), today)
-        redis.rpush(f"channels:{path}:songs", *[json.dumps(song) for song in songs])
+        if songs:
+            redis.rpush(f"channels:{path}:songs", *[json.dumps(song) for song in songs])
         redis.set(f"channels:{path}:updated", datetime.datetime.now(datetime.UTC).timestamp())
 
 
