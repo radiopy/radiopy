@@ -2,6 +2,9 @@ services:
   scheduler:
     build: .
     image: ghcr.io/radiopy/radiopy:latest
+#    volumes:
+#      - ./config.toml:/app/config.toml  # alternative to using environment variables
+#      - ./cronfile:/app/cronfile  # use this if you want to use a custom cronfile
     container_name: radiopy-scheduler
     environment:
       RADIOPY_CONFIG: |
@@ -34,15 +37,16 @@ services:
   redis:
     image: redis:latest
     restart: always
+    ports:
+      - "6379:6379"
     volumes:
       - redis:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 30s
       retries: 50
       start_period: 30s
 
-    # volumes:
-      # - ./config.toml:/app/config.toml  # alternative to using environment variables
-      # - ./cronfile:/app/cronfile  # use this if you want to use a custom cronfile
+volumes:
+  redis:
