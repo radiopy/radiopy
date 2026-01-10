@@ -19,7 +19,10 @@ client_secret = "client_secret"
 redirect_uri = "http://127.0.0.1:8080/callback"
 scope = "playlist-modify-private playlist-modify-public"
 
-[ftp]  # optinal category
+[metadata]
+path = "/output/metadata.json"
+
+[metadata.ftp]  # optinal category
 hostname = "ftp.example.com"
 username = "username"
 password = "password"

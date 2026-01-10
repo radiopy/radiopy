@@ -5,7 +5,7 @@ from io import BytesIO
 from src.config import config
 from src.redis_manager import RedisManager
 
-config = config.get("ftp")
+config = config.get("metadata")
 
 redis = RedisManager()
 
@@ -91,12 +91,16 @@ def main():
     metadata = categorize_metadata(metadata)
     metadata = list(metadata.values())
     if config:
-        with ftplib.FTP_TLS(config["hostname"], config["username"], config["password"]) as session:
-            session.prot_p()
-            session.storbinary("STOR metadata.json",
-                               BytesIO(json.dumps(metadata, separators=(",", ":"), ensure_ascii=False).encode("utf-8")))
-    else:
-        print(json.dumps(metadata, indent=2, ensure_ascii=False))
+        if "path" in config:
+            with open(config["path"], "w") as fobj:
+                json.dump(metadata, fobj, indent=2, ensure_ascii=False)
+
+        ftp = config.get("ftp")
+        if ftp:
+            with ftplib.FTP_TLS(ftp["hostname"], ftp["username"], ftp["password"]) as session:
+                session.prot_p()
+                session.storbinary("STOR metadata.json",
+                                   BytesIO(json.dumps(metadata, separators=(",", ":"), ensure_ascii=False).encode("utf-8")))
 
 
 if __name__ == "__main__":
